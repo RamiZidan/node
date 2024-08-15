@@ -42,13 +42,24 @@ const uploadIdImages = [
 ];
 
 const uploadDocument = [
-  check("fileName", "The file name is required").trim().notEmpty(),
-  check("file", "The document is required").custom((value, { req }) => {
+  check("documentName").trim(),
+  check("document", "The document is required").custom((value, { req }) => {
     if (!req.file) {
       throw new Error("The Document is required");
     }
     return true;
   }),
+  check("emails")
+    .isArray()
+    .withMessage("the emails input must be an array")
+    .custom((emails, { req }) => {
+      for (const email of emails) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error(`${email} is not a valid email address`);
+        }
+      }
+      return true;
+    }),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

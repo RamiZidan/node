@@ -9,16 +9,16 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      signedDocument_id: {
+      document_id: {
         type: Sequelize.INTEGER,
         references: {
           model: {
-            tableName: "SignedDocuments",
+            tableName: "Documents",
           },
           key: "id",
         },
         allowNull: false,
-        onDelete: 'CASCADE'
+        onDelete: "CASCADE",
       },
       user_id: {
         type: Sequelize.INTEGER,
@@ -29,7 +29,12 @@ module.exports = {
           key: "id",
         },
         allowNull: false,
-        onDelete: 'CASCADE'
+        onDelete: "CASCADE",
+      },
+      isSigned: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

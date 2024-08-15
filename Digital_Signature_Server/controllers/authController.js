@@ -6,21 +6,19 @@ const path = require("path");
 const CustomError = require("../util/CustomError");
 
 exports.userRegister = async (req, res, next) => {
-  const { firstName, middleName, lastName, organization, email, password } =
-    req.body;
+  const { firstName, middleName, lastName, email, password } = req.body;
   try {
     const hashedPass = await bcrypt.hash(password, 12);
     let userData = {
       firstName: firstName,
       lastName: lastName,
       middleName: middleName,
-      organization: organization,
       email: email,
       password: hashedPass,
     };
     const user = await models.User.create(userData);
     let token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, firstName: user.firstName },
       process.env.JWT_SECRET_KEY,
       { expiresIn: "1h" }
     );
@@ -79,7 +77,6 @@ exports.login = async (req, res, next) => {
       firstName: user.firstName,
       lastName: user.lastName,
       middleName: user.middleName,
-      owrganization: user.organization,
       email: user.email,
       password: user.password,
       role: "user",

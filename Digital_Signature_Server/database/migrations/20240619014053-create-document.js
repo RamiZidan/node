@@ -9,11 +9,11 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      fileName: {
+      documentName: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      file: {
+      document: {
         type: Sequelize.TEXT,
         allowNull: false,
       },
@@ -28,9 +28,12 @@ module.exports = {
       //     "tiff"
       //   ),
       // },
-      // status: {
-      //   type: Sequelize.ENUM("inbox", "draft", "sent", "deleted"),
-      // },
+      documentStatus: {
+        type: Sequelize.ENUM("processing", "completed", "rejected"),
+      },
+      counter: {
+        type: Sequelize.INTEGER,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

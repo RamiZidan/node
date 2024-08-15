@@ -7,6 +7,9 @@ const rateLimiter = require("./middlewares/rateLimiterMiddleware");
 require("dotenv").config();
 const globalErrorHandler = require("./controllers/errorController");
 const corsOptions=require(path.join(__dirname,'config','corsOptions'));
+const cors = require("cors");
+const corsOptions = require("./config/corsOptions");
+
 const app = express();
 const port = process.env.PORT;
 app.use(express.static(path.join(__dirname, "public")));
@@ -15,6 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(rateLimiter);
 
+app.use(cors(corsOptions));
 
 // Importing Routes
 const authRoutes = require("./routes/authRoutes");

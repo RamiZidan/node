@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     issuer: DataTypes.STRING,
     validatePeriod: DataTypes.DATE,
     subject: DataTypes.STRING,
+    organization: DataTypes.STRING,
     ca_signature: DataTypes.TEXT
   }, {
     sequelize,

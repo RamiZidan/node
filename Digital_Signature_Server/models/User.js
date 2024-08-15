@@ -12,7 +12,10 @@ module.exports = (sequelize, DataTypes) => {
       User.hasOne(models.EmailVerification, { foreignKey: "user_id" });
       User.hasOne(models.PublicKey, { foreignKey: "user_id" });
       User.hasMany(models.UserIDImage, { foreignKey: "user_id" });
-      User.hasMany(models.VariousParties, { foreignKey: "user_id" });
+      User.belongsToMany(models.Document, {
+        through: models.VariousParties,
+        foreignKey: "user_id",
+      });
     }
   }
   User.init(
@@ -20,7 +23,6 @@ module.exports = (sequelize, DataTypes) => {
       firstName: DataTypes.STRING,
       lastName: DataTypes.STRING,
       middleName: DataTypes.STRING,
-      organization: DataTypes.STRING,
       email: DataTypes.STRING,
       password: DataTypes.STRING,
     },

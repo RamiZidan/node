@@ -18,7 +18,6 @@ const userRegisterValidation = [
     .notEmpty()
     .isLength({ max: 30 })
     .withMessage("The Name too Long"),
-  check("organization", "Organization is required").trim().notEmpty(),
   check("email", "Email field is required")
     .notEmpty()
     .isEmail()
