@@ -7,8 +7,7 @@ const rateLimiter = require("./middlewares/rateLimiterMiddleware");
 require("dotenv").config();
 const globalErrorHandler = require("./controllers/errorController");
 const corsOptions=require(path.join(__dirname,'config','corsOptions'));
-const cors = require("cors");
-const corsOptions = require("./config/corsOptions");
+
 
 const app = express();
 const port = process.env.PORT;
