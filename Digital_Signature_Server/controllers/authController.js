@@ -89,6 +89,7 @@ exports.login = async (req, res, next) => {
       token: token,
     });
   } catch (err) {
+    console.log(err);
     next(err);
   }
 };

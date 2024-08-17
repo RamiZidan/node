@@ -33,4 +33,4 @@ app.use(emailRoutes);
 
 app.use(globalErrorHandler);
 
-app.listen(port, "localhost", () => console.log("listening on port " + port));
+app.listen(port, "127.0.0.1", () => console.log("listening on port " + port));

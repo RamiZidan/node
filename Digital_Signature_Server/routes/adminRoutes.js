@@ -4,13 +4,13 @@ const adminController = require("../controllers/adminController");
 const isAdmin = require("../middlewares/adminAuthMiddleware");
 
 router.get("/admin/getAllUsers", isAdmin, adminController.getAllUsers);
-
+router.get('/admin/users/:userId', isAdmin , adminController.getAllUsers);
 router.get("/admin/getAllAdmins", isAdmin, adminController.getAllAdmins);
 
 router.get("/admin/getAllContracts", isAdmin, adminController.getAllContracts);
 
 router.get("/admin/getAllDocuments", isAdmin, adminController.getAllDocuments);
-
+// router.get9'/admin/documents/:documentId' , isAdmin 
 router.get("/admin/getUserById/:userId", isAdmin, adminController.getUserById);
 
 router.get(

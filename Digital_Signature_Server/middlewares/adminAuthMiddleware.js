@@ -24,7 +24,7 @@ module.exports = (req, res, next) => {
           );
         }
         const isAdmin = await models.Admin.findOne({
-          where: { id: admin.id, firstNAme: admin.firstName, role: "admin" },
+          where: { id: admin.id, firstName: admin.firstName, role: "admin" },
         });
         if (!isAdmin) {
           throw new CustomError("Invalid token. Access is forbidden.", 403);

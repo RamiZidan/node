@@ -73,6 +73,27 @@ exports.getAllDocuments = async (req, res, next) => {
   }
 };
 
+exports.getDocumentById = async (req, res , next)=>{
+  try{
+    const document = await models.Document.find({id: req.params.documentId }) ; 
+    if(!document){
+      return res.status(200).json({
+        message:'document not found' ,
+        data: {}
+      })
+    }
+    else{
+      return res.status(200).json({
+        message:'success',
+        data: document
+      })
+    }
+  }catch(err){
+    next(err)
+    
+  }
+}
+
 exports.getUserById = async (req, res, next) => {
   try {
     const userId = await req.params.userId;
