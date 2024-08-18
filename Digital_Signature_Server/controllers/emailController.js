@@ -96,8 +96,8 @@ D.Signature`,
   }
 };
 
-exports.sendSigningEmail = async (req, res, next) => {
-  const { senderEmail, recipientEmail, websiteUrl } = req.body;
+exports.sendSigningEmail =  async  (senderEmail, recipientEmail, websiteUrl) => {
+  // const { senderEmail, recipientEmail, websiteUrl } = req.body;
 
   try {
     for (let index = 0; index < recipientEmail.length; index++) {
@@ -123,8 +123,10 @@ exports.sendSigningEmail = async (req, res, next) => {
       message: "email sent successfully",
     });
   } catch (err) {
-    // res.status(400).json({ message: err });
-    next(err);
+    // res.status(400).json({ message: err });\
+    console.log(err);
+    
+    // next(err);
   }
 };
 

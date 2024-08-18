@@ -3,7 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 const isUser = require("../middlewares/userAuthMiddleware");
 const multer = require("../util/multer");
-const Validator = require("../middlewares/validators/userValidationMiddleware");
+// const Validator = require("../middlewares/validators/userValidationMiddleware");
 
 // router.post(
 //   "/user/uploadIdImages",
@@ -22,13 +22,13 @@ const Validator = require("../middlewares/validators/userValidationMiddleware");
 //   userController.uploadIdImages
 // );
 
-router.post(
-  "/user/uploadDocument",
-  isUser,
-  multer.uploadDocument.single("document"),
-  Validator.uploadDocument,
-  userController.uploadDocument
-);
+// router.post(
+//   "/user/uploadDocument",
+//   isUser,
+//   multer.uploadDocument.single("document"),
+//   Validator.uploadDocument,
+//   userController.uploadDocument
+// );
 
 router.get("/user/getUser", isUser, userController.getUser);
 

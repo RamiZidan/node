@@ -5,6 +5,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const RSA = require("./digitalSigningController");
+const archiver = require("archiver");
 // exports.sendPersonalInfo = async (req, res, next) => {
 //   const { imageFront, imageBack } = req.body;
 // };
@@ -12,6 +13,15 @@ const RSA = require("./digitalSigningController");
 exports.uploadUserData = async (req, res, next) => {
   const { fullName, nationalNumber } = req.body;
   try {
+    const existingCertificate = await DigitalCertificate.findOne({
+      where: { userId: userId },
+    });
+
+    if (existingCertificate) {
+      return res
+        .status(400)
+        .json({ message: "You already have a certificate." });
+    }
     if (!req.user) {
       throw new CustomError("user is not set", 400);
     }
@@ -182,6 +192,72 @@ exports.createDigitalCertificate = async (req, res, next) => {
     fs.writeFileSync(filePathKey, privateKeyPem);
     fs.writeFileSync(filePathCsr, csrPem);
 
+    /////////////////////////////////////
+    const zipFileName = "user_files.zip";
+    const output = fs.createWriteStream(zipFileName);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    // Flag to track if the response has been sent
+    let responseSent = false;
+
+    // Handle request aborted scenario
+    req.on("aborted", () => {
+      console.log("Request aborted by the client.");
+      responseSent = true;
+      archive.abort(); // Stop archiving process
+      output.end(); // Close the output stream
+
+      // Clean up the incomplete ZIP file
+      fs.unlink(zipFileName, (err) => {
+        if (err) console.error("Error deleting incomplete ZIP file:", err);
+      });
+    });
+
+    // Handle errors during archiving
+    archive.on("error", (err) => {
+      console.error("Archive error:", err);
+      if (!responseSent) {
+        responseSent = true;
+        res.status(500).send("Error creating archive");
+      }
+    });
+
+    // Send ZIP file to the user once finalized
+    output.on("close", () => {
+      if (!responseSent) {
+        responseSent = true;
+        res.download(zipFileName, zipFileName, (err) => {
+          if (err) {
+            console.error("ZIP file download failed:", err);
+            res.status(500).send("Error downloading ZIP file");
+          } else {
+            // Remove the ZIP file after successful download
+            fs.unlink(zipFileName, (err) => {
+              if (err) console.error("Error deleting ZIP file:", err);
+            });
+          }
+        });
+      }
+    });
+
+    // Ensure that headers are not sent after the response is complete
+    output.on("finish", () => {
+      if (!responseSent) {
+        responseSent = true;
+        res.end();
+      }
+    });
+
+    // Start piping the archive data to the output file
+    archive.pipe(output);
+
+    // Append both files to the ZIP
+    archive.file(filePathCsr, { name: "user.csr" });
+    archive.file(filePathKey, { name: "user.key" });
+
+    // Finalize the archive (must be called to complete the ZIP file)
+    archive.finalize();
+    ////////////////////////////////////
     // const filePathKey = path.join(__dirname, "user.key");
     // const filePathKey2 = path.join(__dirname, "public.key");
     // fs.writeFileSync(filePathKey, privateKeyPem);
@@ -201,7 +277,7 @@ exports.createDigitalCertificate = async (req, res, next) => {
 exports.verifyCertificate = (req, res, next) => {
   const { certificate } = req.body;
   try {
-    const certificate1 =  fs.readFileSync(certificate);
+    const certificate1 = fs.readFileSync(certificate);
     const csr = forge.pki.certificationRequestFromPem(certificate1);
     const subject = csr.subject.attributes.map((attr) => {
       return {
@@ -215,7 +291,7 @@ exports.verifyCertificate = (req, res, next) => {
       subject: subject,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res
       .status(500)
       .json({ error: "Invalid CSR format or verification failed." });

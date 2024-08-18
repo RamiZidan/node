@@ -32,8 +32,8 @@ module.exports = {
         onDelete: "CASCADE",
       },
       isSigned: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
+        type: Sequelize.TEXT,
+        allowNull: true,
         defaultValue: false,
       },
       createdAt: {

@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   VariousParties.init(
     {
       user_id: DataTypes.INTEGER,
-      isSigned: DataTypes.BOOLEAN,
+      isSigned: DataTypes.TEXT,
     },
     {
       sequelize,

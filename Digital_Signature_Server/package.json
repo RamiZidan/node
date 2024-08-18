@@ -10,6 +10,7 @@
   "author": "mhammad alkhateeb",
   "license": "ISC",
   "dependencies": {
+    "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "big-integer": "^1.6.52",
     "bignumber.js": "^9.1.2",

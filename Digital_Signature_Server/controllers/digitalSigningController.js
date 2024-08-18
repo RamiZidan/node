@@ -1,8 +1,12 @@
 const forge = require("node-forge");
 const crypto = require("crypto");
+const CustomError = require("../util/CustomError");
 const fs = require("fs");
 const bigIntaseger = require("big-integer");
 const BigNumber = require("bignumber.js");
+const emailController = require("../controllers/emailController");
+const models = require("../models/index");
+const path = require("path");
 
 function bigIntToBuffer(bigint) {
   let hexString = bigint.toString(16);
@@ -220,7 +224,7 @@ exports.digitalSigning = async (req, res, next) => {
       key: fs.readFileSync("user.key"),
       format: "pem",
     });
-    
+
     const pkcs8Key = privateKey2.export({
       format: "pem",
       type: "pkcs8",
@@ -276,3 +280,67 @@ exports.verifySignature = (req, res, next) => {
 function sha256(input) {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
+
+exports.signDocument = async (req, res, next) => {
+  const { signature, emails, documentName } = req.body;
+  const transaction = await models.sequelize.transaction();
+  try {
+    const user = await models.User.findOne({
+      where: { id: req.user.id },
+      transaction,
+    });
+
+    //send emails to parties
+    emailController.sendSigningEmail(user.email, emails, "www.Dsign.com");
+
+    //upload doc
+    let doc = await models.Document.create(
+      {
+        documentName: documentName || req.file.originalname,
+        document: path.relative("public", req.file.path),
+        documentStatus: "processing",
+        counter: emails.length + 1,
+      },
+      { transaction }
+    );
+
+    await user.addDocument(doc, {
+      through: { isSigned: signature },
+      transaction,
+    });
+
+    for (const email of emails) {
+      let us = await models.User.findOne({
+        where: { email: email },
+        transaction,
+      });
+      if (!us) {
+        throw new CustomError(`${email} is not a user`);
+        /*
+          // add to the database as a guest
+          us = await models.User.create({ email: email }, { transaction });
+          // send a registration email to notify him that he should register
+          // set a registrationExpiry for the user
+          // create a scheduled job (node-cron) 
+          // delete the user if the registrationExpiry is out
+          */
+      }
+      await models.VariousParties.create(
+        {
+          user_id: us.id,
+          document_id: doc.id,
+          isSigned: null,
+        },
+        { transaction }
+      );
+    }
+    await transaction.commit();
+    return res.json({
+      message: "Document uploaded successfully",
+      data: doc,
+    });
+  } catch (error) {
+    await transaction.rollback();
+    next(error);
+  }
+};
