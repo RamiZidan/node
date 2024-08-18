@@ -28,7 +28,6 @@ const signingRoutes = require("./routes/signingRoutes");
 const certificateOrdersRoutes = require("./routes/certificatesOrdersRoutes");
 const portalRoutes = require("./routes/portalRequestRoutes");
 
-
 // Using Routes
 app.use(authRoutes);
 app.use(userRoutes);

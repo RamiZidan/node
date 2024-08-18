@@ -13,7 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       // Admin.hasMany(models.RealEstatePortalRequest, {foreignKey: 'admin_id'})
       // Admin.hasMany(models.RealEstatePortalRequest, {foreignKey: 'governmentOfficial_id'})
-      Admin.hasMany(models.DigitalCertificate, {foreignKey: 'admin_id'})
+
+      // Admin.hasMany(models.DigitalCertificate, {foreignKey: 'admin_id'})
+
     }
   }
   Admin.init({

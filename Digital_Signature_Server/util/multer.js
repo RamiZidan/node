@@ -49,6 +49,8 @@ const documentFilter = (req, file, cb) => {
   const allowedMimeTypes = new Set([
     // type/subType
     "application/pdf",
+    "application/csr",
+    "application/key",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",

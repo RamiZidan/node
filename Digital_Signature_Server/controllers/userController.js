@@ -136,23 +136,28 @@ exports.getUserDocuments = async (req, res, next) => {
 exports.getDocumentParties = async (req, res, next) => {
   try {
     const documentId = req.params.document_id;
-    const document = await models.Document.findByPk(documentId, {
-      include: [
-        {
-          model: models.User,
-          through: {
-            attributes: [],
-          },
-        },
-      ],
-    });
+    const document = await models.Document.findByPk(documentId);
     if (!document) {
       throw new CustomError("Document not found", 400);
     }
-    
+    const variousParties = await models.VariousParties.findAll({
+      where: { document_id: documentId },
+      include: [
+        {
+          model: models.User,
+        },
+      ],
+    });
+    if (variousParties.length == 0) {
+      throw new CustomError("Document not found", 400);
+    }
+    const result = {
+      document,
+      variousParties,
+    };
     return res.status(200).json({
       message: "Success",
-      data: document,
+      data: result,
     });
   } catch (err) {
     next(err);

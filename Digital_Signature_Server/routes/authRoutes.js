@@ -11,10 +11,8 @@ router.post(
   authController.userRegister
 );
 
-router.post(
-  "user/login",
-  Validator.userLoginValidation,
-  authController.login
-);
+
+router.post("/user/login", Validator.userLoginValidation, authController.login);
+
 
 module.exports = router;

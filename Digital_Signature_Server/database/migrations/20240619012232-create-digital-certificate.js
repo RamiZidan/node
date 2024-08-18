@@ -20,17 +20,7 @@ module.exports = {
         allowNull: false,
         onDelete: "CASCADE",
       },
-      admin_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: {
-            tableName: "Admins",
-          },
-          key: "id",
-        },
-        allowNull: false,
-        onDelete: "CASCADE",
-      },
+
       version: {
         type: Sequelize.STRING,
         allowNull: false,
@@ -59,10 +49,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      ca_signature: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

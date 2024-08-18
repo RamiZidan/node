@@ -38,6 +38,15 @@ exports.uploadUserData = async (req, res, next) => {
 exports.changeOrderStatus = async (req, res, next) => {
   const { status } = req.body;
   try {
+    const existingCertificate = await DigitalCertificate.findOne({
+      where: { userId: userId },
+    });
+
+    if (existingCertificate) {
+      return res
+        .status(400)
+        .json({ message: "You already have a certificate." });
+    }
     if (!req.user) {
       throw new CustomError("user is not set", 400);
     }
@@ -58,61 +67,67 @@ exports.changeOrderStatus = async (req, res, next) => {
 };
 
 exports.createDigitalCertificate = async (req, res, next) => {
-  const {
-    serialNum,
-    subject,
-    validityPeriod,
-    userEmail,
-    organization,
-    CAprivateKey,
-    version,
-    country,
-  } = req;
+  const { serialNum, subject, organization, version } = req;
   try {
-    if (!req.admin) {
-      throw new CustomError("user is not set", 400);
-    }
     const RSAR = await RSA.RSA();
     const customPublicKey = RSAR.publicKey;
     const customPrivateKey = RSAR.privateKey;
+    console.log(2);
 
     const { publicKey, privateKey } = RSA.customKeyToForgeKey(
       customPublicKey,
       customPrivateKey
     );
+    console.log(3);
+    const user = await models.User.findOne({ where: { id: req.user.id } });
+    // const user = await models.User.findOne({ where: { email: userEmail } });
+    let currentDate = new Date();
+    let validityPeriod = currentDate.setFullYear(currentDate.getFullYear() + 1);
+    const certificate = await models.DigitalCertificate.create({
+      user_id: user.id,
+      version: version,
+      serialNumber: serialNum,
+      organization: organization,
+      signatureAlgorithm: "RSA",
+      issuer: user.firstName + " " + user.lastName,
+      validatePeriod: validityPeriod,
+      subject: subject,
+    });
 
-    const user = await models.User.findOne({ where: { email: userEmail } });
+    console.log(4);
 
-    if (user) {
-      const certificate = await models.DigitalCertificates.create({
-        user_id: user.id,
-        version: version,
-        serialNumber: serialNum,
-        organization: organization,
-        signatureAlgorithm: "RSA",
-        issuer: req.admin.firstName + " " + req.admin.lastName,
-        validatePeriod: validityPeriod,
-        subject: subject,
-      });
+    const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
+
+    const publicK = await models.PublicKey.create({
+      user_id: user.id,
+      publicKey: publicKeyPem,
+    });
+
+    const csr = forge.pki.createCertificationRequest();
+    if (!publicKey) {
+      throw new Error("Public key is null or undefined");
+    }
+    csr.publicKey = publicKey;
+
+    if (!user || !user.firstName || !user.lastName || !user.email) {
+      throw new Error("Invalid user object");
     }
 
-    const publicK = await models.PublicKeys.create({
-      user_id: user.id,
-      publicKey: publicKey,
-    });
-    const csr = forge.pki.createCertificationRequest();
-    csr.publicKey = publicKey;
     csr.setSubject([
-      { name: "full Name", value: fullName },
-      { name: "version", value: version },
-      { name: "Serial number", value: serialNum },
-      { name: "Subject", value: subject },
-      { name: "Issuer", value: req.admin.firstName + " " + req.admin.lastName },
-      { name: "Validity period", value: validityPeriod },
-      { name: "Public key", value: publicKey },
-      { name: "countryName", value: country },
-      { name: "emailAddress", value: userEmail },
+      {
+        name: "commonName",
+        value: `${user.firstName} ${user.lastName}`,
+      },
+      {
+        name: "emailAddress",
+        value: user.email,
+      },
+      {
+        name: "organizationName",
+        value: `${user.firstName} ${user.lastName}`,
+      },
     ]);
+
     csr.addAttribute({
       name: "extensionRequest",
       extensions: [
@@ -120,37 +135,34 @@ exports.createDigitalCertificate = async (req, res, next) => {
           name: "subjectAltName",
           altNames: [
             {
-              type: 2,
-              value: "www.example.com",
+              type: 2, // DNS type
+              value: "www.Dsign.com",
             },
             {
-              type: 1,
-              value: "john.doe@example.com",
+              type: 1, // Email type
+              value: user.email,
             },
           ],
         },
         {
           name: "keyUsage",
           critical: true,
-          ivalues: ["digitalSignature", "keyEncipherment"],
+          usages: ["digitalSignature", "keyEncipherment"],
         },
         {
-          name: "extendedKeyUsage",
+          name: "extKeyUsage",
           critical: true,
-
-          value: ["serverAuth", "clientAuth"],
+          usages: ["serverAuth", "clientAuth"],
         },
       ],
     });
-
-    csr.sign(CAprivateKey);
+    csr.sign(privateKey, forge.md.sha256.create());
 
     const privateKeyPem = forge.pki.privateKeyToPem(privateKey);
-    // const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
     const csrPem = forge.pki.certificationRequestToPem(csr);
 
     const platform = os.platform();
-
+    console.log(6);
     let filePathKey;
     let filePathCsr;
 
@@ -189,8 +201,8 @@ exports.createDigitalCertificate = async (req, res, next) => {
 exports.verifyCertificate = (req, res, next) => {
   const { certificate } = req.body;
   try {
-    const csr = forge.pki.certificationRequestFromPem(certificate);
-
+    const certificate1 =  fs.readFileSync(certificate);
+    const csr = forge.pki.certificationRequestFromPem(certificate1);
     const subject = csr.subject.attributes.map((attr) => {
       return {
         type: attr.name,
@@ -203,6 +215,7 @@ exports.verifyCertificate = (req, res, next) => {
       subject: subject,
     });
   } catch (error) {
+    console.log(error)
     res
       .status(500)
       .json({ error: "Invalid CSR format or verification failed." });
