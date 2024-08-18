@@ -11,11 +11,11 @@ module.exports = (req, res, next) => {
         401
       );
     }
-    const token = authHeader.split(" ")[1];
+    let token = authHeader.split(" ")[1];
     if (!token) {
       throw new CustomError("Bearer token is missing. Access is denied.", 401);
     }
-    jwt.verify(token, process.env.JWT_SECRET_KEY, async (error, user) => {
+    jwt.verify(token, process.env.JWT_SECRET_KEY, async (error, admin) => {
       try {
         if (error) {
           throw new CustomError(
@@ -23,16 +23,13 @@ module.exports = (req, res, next) => {
             403
           );
         }
-        const isUser = await models.User.findOne({
-          where: { id: user.id, firstName: user.firstName },
+        const isAdmin = await models.Admin.findOne({
+          where: { id: admin.id, firstNAme: admin.firstName },
         });
-        if (!isUser) {
+        if (!isAdmin) {
           throw new CustomError("Invalid token. Access is forbidden.", 403);
         }
-        if(isUser.blocked == 1){
-          throw new CustomError("Access is forbidden (blocked).", 403);
-        }
-        req.user = user;
+        req.admin = admin;
         next();
       } catch (err) {
         next(err);

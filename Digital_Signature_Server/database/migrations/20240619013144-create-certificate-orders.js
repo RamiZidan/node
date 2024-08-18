@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("UserIDImages", {
+    await queryInterface.createTable("CertificateOrders", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -24,9 +24,24 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: false,
       },
+      fullName: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      nationalNumber: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      // fingerPrint: {
+      //   type: Sequelize.INTEGER,
+      //   allowNull: false,
+      // },
       image_backSide: {
         type: Sequelize.TEXT,
         allowNull: false,
+      },
+      reqStatus: {
+        type: Sequelize.ENUM("pending", "approved", "rejected"),
       },
       createdAt: {
         allowNull: false,
@@ -39,6 +54,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("UserIDImages");
+    await queryInterface.dropTable("CertificateOrders");
   },
 };

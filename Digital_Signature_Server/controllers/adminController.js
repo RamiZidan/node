@@ -1,5 +1,6 @@
 const models = require("../models/index");
 const CustomError = require("../util/CustomError");
+const path = require("path");
 
 exports.getAllUsers = async (req, res, next) => {
   try {
@@ -49,6 +50,42 @@ exports.getAllContracts = async (req, res, next) => {
         data: contracts,
       });
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.addContract = async (req, res, next) => {
+  try {
+    const { contractName, description } = req.body;
+    const contract = await models.Contract.create({
+      contractName: contractName,
+      contract: path.relative("public", req.file.path),
+      description: description,
+    });
+    return res.status(200).json({
+      message: "contract uploaded successfully",
+      data: contract,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteContract = async (req, res, next) => {
+  try {
+    const contract = await models.Contract.findOne({
+      where: { id: req.params.contract_id },
+    });
+    if (!contract) {
+      return res.status(400).json({
+        message: "there is no contract with this id",
+      });
+    }
+    await contract.destroy();
+    return res.status(200).json({
+      message: "Contract deleted successfully",
+    });
   } catch (err) {
     next(err);
   }
@@ -141,6 +178,63 @@ exports.getUserDocumentsById = async (req, res, next) => {
     }
   } catch (err) {
     next(err);
+  }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const user = await models.User.findOne({
+      where: { id: req.params.user_id },
+    });
+    if (!user) {
+      return res.status(400).json({
+        message: "there is no user with this id",
+      });
+    }
+
+    const parties = await models.VariousParties.findAll({
+      where: { user_id: user.id },
+    });
+    for (const element of parties) {
+      // if the user deleted the document before signing
+      if (element.isSigned === false) {
+        await models.Document.update(
+          { documentStatus: "rejected" },
+          { where: { id: element.document_id } }
+        );
+      }
+    }
+
+    await user.destroy();
+    return res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.blockUser = async (req, res, next) => {
+  try {
+    const user = await models.User.findOne({
+      where: { id: req.params.user_id },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "there is no user with this id" });
+    }
+    user.blocked = req.body.blocked;
+    user.save();
+    if (req.body.blocked == 1) {
+      return res.status(200).json({
+        message: "User blocked successfully",
+      });
+    } else {
+      return res.status(200).json({
+        message: "User unblocked successfully",
+      });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 

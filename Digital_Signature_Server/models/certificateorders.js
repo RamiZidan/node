@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class DigitalCertificate extends Model {
+  class UserIDImage extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,20 +11,18 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  DigitalCertificate.init(
+  UserIDImage.init(
     {
-      version: DataTypes.STRING,
-      serialNumber: DataTypes.INTEGER,
-      signatureAlgorithm: DataTypes.STRING,
-      issuer: DataTypes.STRING,
-      validatePeriod: DataTypes.DATE,
-      subject: DataTypes.STRING,
-      ca_signature: DataTypes.TEXT,
+      image_frontSide: DataTypes.TEXT,
+      image_backSide: DataTypes.TEXT,
+      fullName: DataTypes.STRING,
+      nationalNumber: DataTypes.INTEGER,
+      reqStatus: DataTypes.ENUM("pending", "approved", "rejected"),
     },
     {
       sequelize,
-      modelName: "DigitalCertificate",
+      modelName: "CertificateOrders",
     }
   );
-  return DigitalCertificate;
+  return UserIDImage;
 };

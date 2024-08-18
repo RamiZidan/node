@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Contract.init({
     contractName: DataTypes.STRING,
-    contract: DataTypes.TEXT
+    contract: DataTypes.TEXT,
+    description: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'Contract',

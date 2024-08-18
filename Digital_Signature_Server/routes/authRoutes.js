@@ -12,7 +12,7 @@ router.post(
 );
 
 router.post(
-  "/login",
+  "user/login",
   Validator.userLoginValidation,
   authController.login
 );

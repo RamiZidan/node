@@ -1,4 +1,7 @@
 "use strict";
+
+const { sequelize } = require("../../models");
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -9,39 +12,52 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      admin_id: {
+      user_id: {
         type: Sequelize.INTEGER,
         references: {
           model: {
-            tableName: "Admins",
+            tableName: "Users",
           },
           key: "id",
         },
         allowNull: false,
         onDelete: "CASCADE",
+      },
+      admin_id: {
+        type: Sequelize.INTEGER,
+        // references: {
+        //   model: {
+        //     tableName: "Admins",
+        //   },
+        //   key: "id",
+        // },
+        // allowNull: false,
+        // onDelete: "CASCADE",
       },
       governmentOfficial_id: {
         type: Sequelize.INTEGER,
-        references: {
-          model: {
-            tableName: "Admins",
-          },
-          key: "id",
-        },
-        allowNull: false,
-        onDelete: "CASCADE",
+        // references: {
+        //   model: {
+        //     tableName: "Admins",
+        //   },
+        //   key: "id",
+        // },
+        // allowNull: false,
+        // onDelete: "CASCADE",
       },
-      name: {
+      reqName: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      data: {
-        type: Sequelize.STRING,
+      taboImage: {
+        type: Sequelize.TEXT,
         allowNull: false,
+      },
+      message: {
+        type: Sequelize.TEXT,
       },
       reqStatus: {
-        // fill it as you want
-        type: Sequelize.ENUM("pending", "approved", "rejected"),
+        type: Sequelize.ENUM("pending", "published", "approved", "rejected"),
       },
       createdAt: {
         allowNull: false,

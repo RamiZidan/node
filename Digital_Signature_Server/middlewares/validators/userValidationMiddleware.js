@@ -22,18 +22,18 @@ const uploadIdImages = [
     if (!errors.isEmpty()) {
       // If There Is Some Error then delete the uploaded files
       if (req.files) {
-        if (req.files.image_frontSide && req.files.image_frontSide[0]) {
-          fs.unlink(req.files.image_frontSide[0].path, (unlinkErr) => {
-            if (unlinkErr)
-              console.error("Failed to delete front side image:", unlinkErr);
-          });
-        }
-        if (req.files.image_backSide && req.files.image_backSide[0]) {
-          fs.unlink(req.files.image_backSide[0].path, (unlinkErr) => {
-            if (unlinkErr)
-              console.error("Failed to delete back side image:", unlinkErr);
-          });
-        }
+          if (req.files.image_frontSide && req.files.image_frontSide[0]) {
+            fs.unlink(req.files.image_frontSide[0].path, (unlinkErr) => {
+              if (unlinkErr)
+                console.error("Failed to delete front side image:", unlinkErr);
+            });
+          }
+          if (req.files.image_backSide && req.files.image_backSide[0]) {
+            fs.unlink(req.files.image_backSide[0].path, (unlinkErr) => {
+              if (unlinkErr)
+                console.error("Failed to delete back side image:", unlinkErr);
+            });
+          }
       }
       return res.status(400).json(errors);
     }
