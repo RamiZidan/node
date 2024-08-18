@@ -25,7 +25,7 @@ const Validator = require("../middlewares/validators/userValidationMiddleware");
 router.post(
   "/user/uploadDocument",
   isUser,
-  multer.uploadDocument.single("certificate"),
+  multer.uploadDocument.single("document"),
   Validator.uploadDocument,
   userController.uploadDocument
 );
