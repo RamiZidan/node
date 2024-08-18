@@ -17,7 +17,12 @@ module.exports = (sequelize, DataTypes) => {
       image_backSide: DataTypes.TEXT,
       fullName: DataTypes.STRING,
       nationalNumber: DataTypes.INTEGER,
-      reqStatus: DataTypes.ENUM("pending", "approved", "rejected"),
+      reqStatus: DataTypes.ENUM(
+        "pending",
+        "processing",
+        "approved",
+        "rejected"
+      ),
     },
     {
       sequelize,

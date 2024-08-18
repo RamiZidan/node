@@ -3,6 +3,7 @@ const router = express.Router();
 const CertificateController = require("../controllers/digitalCertificateController");
 const multer = require("../util/multer");
 const userAuth = require("../middlewares/userAuthMiddleware");
+const Auth = require("../middlewares/generalAdminsAuthMiddleware");
 
 router.post(
   "/C_Orders/uploadUserData",
@@ -37,6 +38,11 @@ router.post(
   multer.uploadDocument.single("document"),
   userAuth,
   CertificateController.verifyCertificate
+);
+router.get(
+  "/C_Orders/getAllCertificateOrders",
+  Auth,
+  CertificateController.getAllCertificateOrders
 );
 
 module.exports = router;

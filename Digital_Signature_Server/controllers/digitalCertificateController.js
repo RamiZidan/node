@@ -6,15 +6,12 @@ const os = require("os");
 const path = require("path");
 const RSA = require("./digitalSigningController");
 const archiver = require("archiver");
-// exports.sendPersonalInfo = async (req, res, next) => {
-//   const { imageFront, imageBack } = req.body;
-// };
 
 exports.uploadUserData = async (req, res, next) => {
   const { fullName, nationalNumber } = req.body;
   try {
-    const existingCertificate = await DigitalCertificate.findOne({
-      where: { userId: userId },
+    const existingCertificate = await models.DigitalCertificate.findOne({
+      where: { userId: req.user.id },
     });
 
     if (existingCertificate) {
@@ -48,15 +45,6 @@ exports.uploadUserData = async (req, res, next) => {
 exports.changeOrderStatus = async (req, res, next) => {
   const { status } = req.body;
   try {
-    const existingCertificate = await DigitalCertificate.findOne({
-      where: { userId: userId },
-    });
-
-    if (existingCertificate) {
-      return res
-        .status(400)
-        .json({ message: "You already have a certificate." });
-    }
     if (!req.user) {
       throw new CustomError("user is not set", 400);
     }
@@ -77,34 +65,47 @@ exports.changeOrderStatus = async (req, res, next) => {
 };
 
 exports.createDigitalCertificate = async (req, res, next) => {
-  const { serialNum, subject, organization, version } = req;
+  // edit to generate all
+
+  const { organization } = req;
   try {
+    const existingCertificate = await models.DigitalCertificate.findOne({
+      where: { userId: req.user.id },
+    });
+
+    if (existingCertificate) {
+      return res
+        .status(400)
+        .json({ message: "You already have a certificate." });
+    }
+
+    const timestamp = Date.now().toString(16);
+    const randomBytes = crypto.randomBytes(8).toString("hex");
+    const serialNumber = `${timestamp}${randomBytes}`;
+
     const RSAR = await RSA.RSA();
     const customPublicKey = RSAR.publicKey;
     const customPrivateKey = RSAR.privateKey;
-    console.log(2);
 
     const { publicKey, privateKey } = RSA.customKeyToForgeKey(
       customPublicKey,
       customPrivateKey
     );
-    console.log(3);
+
     const user = await models.User.findOne({ where: { id: req.user.id } });
     // const user = await models.User.findOne({ where: { email: userEmail } });
     let currentDate = new Date();
     let validityPeriod = currentDate.setFullYear(currentDate.getFullYear() + 1);
     const certificate = await models.DigitalCertificate.create({
       user_id: user.id,
-      version: version,
-      serialNumber: serialNum,
+      version: "X.509",
+      serialNumber: serialNumber,
       organization: organization,
       signatureAlgorithm: "RSA",
       issuer: user.firstName + " " + user.lastName,
       validatePeriod: validityPeriod,
-      subject: subject,
+      subject: "individual certificate",
     });
-
-    console.log(4);
 
     const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
 
@@ -172,7 +173,7 @@ exports.createDigitalCertificate = async (req, res, next) => {
     const csrPem = forge.pki.certificationRequestToPem(csr);
 
     const platform = os.platform();
-    console.log(6);
+
     let filePathKey;
     let filePathCsr;
 
@@ -197,23 +198,19 @@ exports.createDigitalCertificate = async (req, res, next) => {
     const output = fs.createWriteStream(zipFileName);
     const archive = archiver("zip", { zlib: { level: 9 } });
 
-    // Flag to track if the response has been sent
     let responseSent = false;
 
-    // Handle request aborted scenario
     req.on("aborted", () => {
       console.log("Request aborted by the client.");
       responseSent = true;
-      archive.abort(); // Stop archiving process
-      output.end(); // Close the output stream
+      archive.abort();
+      output.end();
 
-      // Clean up the incomplete ZIP file
       fs.unlink(zipFileName, (err) => {
         if (err) console.error("Error deleting incomplete ZIP file:", err);
       });
     });
 
-    // Handle errors during archiving
     archive.on("error", (err) => {
       console.error("Archive error:", err);
       if (!responseSent) {
@@ -222,7 +219,6 @@ exports.createDigitalCertificate = async (req, res, next) => {
       }
     });
 
-    // Send ZIP file to the user once finalized
     output.on("close", () => {
       if (!responseSent) {
         responseSent = true;
@@ -231,7 +227,6 @@ exports.createDigitalCertificate = async (req, res, next) => {
             console.error("ZIP file download failed:", err);
             res.status(500).send("Error downloading ZIP file");
           } else {
-            // Remove the ZIP file after successful download
             fs.unlink(zipFileName, (err) => {
               if (err) console.error("Error deleting ZIP file:", err);
             });
@@ -240,7 +235,6 @@ exports.createDigitalCertificate = async (req, res, next) => {
       }
     });
 
-    // Ensure that headers are not sent after the response is complete
     output.on("finish", () => {
       if (!responseSent) {
         responseSent = true;
@@ -248,14 +242,11 @@ exports.createDigitalCertificate = async (req, res, next) => {
       }
     });
 
-    // Start piping the archive data to the output file
     archive.pipe(output);
 
-    // Append both files to the ZIP
     archive.file(filePathCsr, { name: "user.csr" });
     archive.file(filePathKey, { name: "user.key" });
 
-    // Finalize the archive (must be called to complete the ZIP file)
     archive.finalize();
     ////////////////////////////////////
     // const filePathKey = path.join(__dirname, "user.key");
@@ -295,5 +286,30 @@ exports.verifyCertificate = (req, res, next) => {
     res
       .status(500)
       .json({ error: "Invalid CSR format or verification failed." });
+  }
+};
+
+exports.getCertificateOrderStatus = (req, res, next) => {
+  const status = models.CertificateOrders.findOne({
+    where: { user_id: req.user.id },
+  });
+
+  return res.status(200).json({
+    message: success,
+    status: status.reqStatus,
+  });
+};
+
+exports.getAllCertificateOrders = async (req, res, next) => {
+  try {
+    const certificateOrders = await models.CertificateOrders.findAll();
+
+    return res.status(200).json(certificateOrders);
+  } catch (error) {
+    console.error("Error fetching certificate orders:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve certificate orders",
+      error: error.message,
+    });
   }
 };
