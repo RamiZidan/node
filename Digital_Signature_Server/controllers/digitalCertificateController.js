@@ -473,7 +473,7 @@ exports.signDocument = async (req, res , next )=>{
   let document = await models.Document.findOne({
     where:{id: document_id}
   });
-  let file = fs.readFileSync(path.resolve('public' , document?.document)) ;
+  let file = fs.readFileSync(path.resolve( document?.document)) ;
   let base64 = Buffer.from(file).toString('base64') ;
   let isValid = verify(signature , publicKey , base64) ; 
 
