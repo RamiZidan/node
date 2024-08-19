@@ -217,11 +217,13 @@ exports.customKeyToForgeKey = (publicKey, privateKey) => {
 
 exports.digitalSigning = async (req, res, next) => {
   try {
-    const { message, privateKey } = req.body;
-
+    const { message } = req.body;
+    const privateKeyPath = req.file.path;
     const hash = sha256(message);
+
+    const privateKey = fs.readFileSync(privateKeyPath, { encoding: "utf-8" });
     const privateKey2 = crypto.createPrivateKey({
-      key: fs.readFileSync("user.key"),
+      key: privateKey,
       format: "pem",
     });
 
@@ -245,10 +247,37 @@ exports.digitalSigning = async (req, res, next) => {
   }
 };
 
-exports.verifySignature = (req, res, next) => {
+exports.verifySignature = async (req, res, next) => {
   try {
     const { message, signature } = req.body;
-
+    const userId = req.user.id;
+    const document_id = req.params.document_id;
+    //here
+    const document = await models.Document.findOne({
+      where: { id: document_id },
+    });
+    if (!document) {
+      return res
+        .status(400)
+        .json({ message: "there is no document with this id" });
+    }
+    // return res.json({ data: document.document });
+    // Step 1: Get rows from VariousParties for the current document
+    const variousParties = await models.VariousParties.findAll({
+      where: { document_id: document_id },
+      include: [
+        {
+          model: models.User,
+          include: [
+            {
+              model: models.PublicKey,
+            },
+          ],
+        },
+      ],
+    });
+    // return res.json({ variousParties });
+    //
     const hash = sha256(message);
 
     const privateKey2 = crypto.createPublicKey({
@@ -272,8 +301,7 @@ exports.verifySignature = (req, res, next) => {
       isValid: isValid,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    next(err);
   }
 };
 
@@ -299,7 +327,7 @@ exports.signDocument = async (req, res, next) => {
         documentName: documentName || req.file.originalname,
         document: path.relative("public", req.file.path),
         documentStatus: "processing",
-        counter: emails.length + 1,
+        counter: emails.length,
       },
       { transaction }
     );
@@ -341,6 +369,93 @@ exports.signDocument = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
+    next(error);
+  }
+};
+
+exports.partySign = async (req, res, next) => {
+  try {
+    const doc = await models.Document.findOne({
+      where: { id: req.params.document_id },
+    });
+    if (!doc) {
+      return res.status(400).json({
+        message: "there is no document with this id",
+      });
+    }
+
+    const variousParties = await models.VariousParties.findOne({
+      where: { user_id: req.user.id, document_id: req.params.document_id },
+    });
+    if (!variousParties) {
+      return res.status(400).json({
+        message: "there is no document to sign",
+      });
+    }
+    if (variousParties.isSigned !== null) {
+      throw new CustomError("you cant sign twice");
+    }
+
+    if (req.body.signature == "rejected") {
+      doc.documentStatus = "rejected";
+      doc.save();
+      // send email to the parties to notify them about the reject
+      const users = await models.VariousParties.findAll({
+        where: { document_id: req.params.document_id },
+        include: [
+          {
+            model: models.User,
+          },
+        ],
+      });
+      const emails = users.map((user) => user.User.email);
+      for (const email of emails) {
+        emailController.sendEmail(
+          req.user.email,
+          email,
+          `${req.user.email} rejected to sign the document
+          document has been rejected`
+        );
+      }
+      return res.status(200).json({
+        message: "signing rejected successfully",
+      });
+    }
+
+    variousParties.isSigned = req.body.signature;
+    variousParties.save();
+    doc.counter = doc.counter - 1;
+    doc.save();
+    if (doc.counter === 0) {
+      doc.documentStatus = "completed";
+      doc.save();
+      // send email to the parties to notify them about the approve
+      const users = await models.VariousParties.findAll({
+        where: { document_id: req.params.document_id },
+        include: [
+          {
+            model: models.User,
+          },
+        ],
+      });
+      const emails = users.map((user) => user.User.email);
+      for (const email of emails) {
+        emailController.sendEmail(
+          req.user.email,
+          email,
+          "signing the document completed successfully"
+        );
+      }
+      return res.status(200).json({
+        message: "Document end of signing Successfully",
+        data: variousParties,
+      });
+    }
+    return res.status(200).json({
+      message: "Document Signed Successfully",
+      data: variousParties,
+    });
+  } catch (error) {
     next(error);
   }
 };

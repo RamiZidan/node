@@ -5,8 +5,6 @@ const { promisify } = require("util");
 
 const { where } = require("sequelize");
 
-
-
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -96,7 +94,7 @@ D.Signature`,
   }
 };
 
-exports.sendSigningEmail =  async  (senderEmail, recipientEmail, websiteUrl) => {
+exports.sendSigningEmail = async (senderEmail, recipientEmail, websiteUrl) => {
   // const { senderEmail, recipientEmail, websiteUrl } = req.body;
 
   try {
@@ -125,7 +123,7 @@ exports.sendSigningEmail =  async  (senderEmail, recipientEmail, websiteUrl) => 
   } catch (err) {
     // res.status(400).json({ message: err });\
     console.log(err);
-    
+
     // next(err);
   }
 };
@@ -173,5 +171,33 @@ exports.verify = async (req, res, next) => {
     }
   } catch (err) {
     next(err);
+  }
+};
+
+// ----------------------------
+exports.sendEmail = async (senderEmail, recipientEmail, message) => {
+  try {
+    const mailOptions = {
+      from: senderEmail,
+      to: recipientEmail,
+      subject: "Request Signing",
+      text: `Dear ${recipientEmail}, ${message}`,
+    };
+
+    transport.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.error("Error sending email:", error);
+        console.error("Response:", error.response);
+        console.error("Response Code:", error.responseCode);
+        console.error("Command:", error.command);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+    res.json({
+      message: "email sent successfully",
+    });
+  } catch (err) {
+    console.log(err);
   }
 };
