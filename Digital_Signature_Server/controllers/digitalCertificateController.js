@@ -53,7 +53,7 @@ exports.changeOrderStatus = async (req, res, next) => {
     const order = await models.CertificateOrders.findOne({
       where: { user_id: id },
     });
-    console.log(order);
+    
     await order.update({ reqStatus: status });
     await order.save();
     res.status(200).json({
@@ -401,22 +401,17 @@ exports.storeDocument = async (req, res , next)=>{
 
     let document_path =  path.resolve(  req.files.document[0].path ) ;
     
-    console.log(  document_path );
-    console.log('000000000000000000000000000000000');
 
     // let document_msg = await fs.readFileSync( document_path ,'utf8') ;
-    console.log('111111111111111111'); 
     let document_msg = base64file ;
-    console.log('22222222222222222222222222');
     let publicKey = await models.PublicKey.findOne({
       where:{user_id: req.user.id} 
     });
-    console.log(publicKey);
     let isValid  = await verify(signature , publicKey.publicKey , document_msg ) ; 
     if(!isValid){
       return res.status(422).json({message:'Failed to verify Identity: Signature does not match public key'}) ;
     }
-    console.log(isValid);
+
     let document = await models.Document.create({
       document: req.files.document[0].path , 
       documentName: req.files.document[0].originalname ,
@@ -430,7 +425,6 @@ exports.storeDocument = async (req, res , next)=>{
     });
     let variousParites = []; 
     emails = emails.split(',');
-    console.log('emailsssss ' ,emails , emails.length ) ;
     for(let i = 0 ;i < emails.length ; i++){
       let user = await models.User.findOne({where:{email: emails[i]}}) ; 
       if(!user){
@@ -441,17 +435,41 @@ exports.storeDocument = async (req, res , next)=>{
         document_id: document.id ,
         isSigned: false
       });
-      console.log(i);
       let parites = await models.VariousParties.create({user_id: user.id , document_id : document.id , isSigned: false });
     }
-    console.log('6666666666666666');
+
     return res.status(200).json({
       message:'created succesfully'
     });
   }
   catch(err){
+    console.log(err);
 
   }
 }
 
-// exports.signDocument = 
+exports.signDocument = async (req, res , next )=>{
+  let {signature , document_id } = req.body ; 
+  let user = req.user ; 
+  let publicKeyObj = await models.PublicKey.findOne({where:{user_id: user.id}});
+  let publicKey = publicKeyObj.publicKey ; 
+  let document = await models.Document.findOne({
+    where:{id: document_id}
+  });
+  let file = fs.readFileSync(path.resolve('public' , document?.document)) ;
+  let base64 = Buffer.from(file).toString('base64') ;
+  let isValid = verify(signature , publicKey , base64) ; 
+
+  if(!isValid){
+    return res.status(422).json({
+      message:'Failed to verify signature' 
+    });
+  }
+  let variousParties = await models.variousParites.updateOne({
+    where:{user_id: user.id , document_id: document_id }
+  }, {isSigned: true});
+  
+  return res.status(200).json({
+    message:'signed succesfully'
+  })
+}

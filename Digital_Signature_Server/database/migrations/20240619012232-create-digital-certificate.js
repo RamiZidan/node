@@ -23,7 +23,7 @@ module.exports = {
 
       version: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       serialNumber: {
         type: Sequelize.INTEGER,
@@ -35,19 +35,19 @@ module.exports = {
       },
       issuer: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       validatePeriod: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
       },
       subject: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       organization: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
 
       createdAt: {

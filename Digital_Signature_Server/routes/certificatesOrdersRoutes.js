@@ -65,4 +65,10 @@ router.post(
   CertificateController.storeDocument
 )
 
+router.post(
+  '/v2/document/:documentId/sign',
+  userAuth,
+  CertificateController.signDocument
+)
+
 module.exports = router;

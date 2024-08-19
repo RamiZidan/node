@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const mysql = require("mysql2");
 const cors = require("cors");
-const rateLimiter = require("./middlewares/rateLimiterMiddleware");
+// const rateLimiter = require("./middlewares/rateLimiterMiddleware");
 require("dotenv").config();
 const globalErrorHandler = require("./controllers/errorController");
 const corsOptions=require(path.join(__dirname,'config','corsOptions'));
@@ -11,11 +11,15 @@ const corsOptions=require(path.join(__dirname,'config','corsOptions'));
 
 const app = express();
 const port = process.env.PORT;
-app.use(express.static(path.join(__dirname, "public")));
+
 app.use(cors(corsOptions));
+
+
+app.use(express.static(path.join(__dirname, "public")));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 app.use(cors(corsOptions));
 

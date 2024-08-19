@@ -4,6 +4,7 @@ const whitelist = require(path.join(__dirname, "whitelist"));
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
+    
     if (whitelist.indexOf(origin) !== -1 || origin == undefined) {
       callback(null, true);
     } else {

@@ -151,6 +151,7 @@ exports.getDocumentParties = async (req, res, next) => {
     if (variousParties.length == 0) {
       throw new CustomError("Document not found", 400);
     }
+
     const result = {
       document,
       variousParties,
