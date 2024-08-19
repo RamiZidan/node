@@ -400,7 +400,7 @@ async function verify(signature, publicKey, document) {
 exports.storeDocument = async (req, res , next)=>{
   try{
     let { signature , emails , base64file } = req.body ;
-    
+    emails = emails.split(',');
     let document_path =  path.resolve(  req.files.document[0].path ) ;
     
     console.log('--------------------------------------------')
@@ -415,6 +415,7 @@ exports.storeDocument = async (req, res , next)=>{
       return res.status(422).json({message:'Failed to verify Identity: Signature does not match public key'}) ;
     }
     console.log('1111111111111111111111111111111111111111')
+    console.log(emails );
     let document = await models.Document.create({
       document: req.files.document[0].path , 
       documentName: req.files.document[0].originalname ,
@@ -429,7 +430,7 @@ exports.storeDocument = async (req, res , next)=>{
     });
     console.log('3333333333333333333333333333333333333333333333333')
     let variousParites = []; 
-    emails = emails.split(',');
+    
     for(let i = 0 ;i < emails.length ; i++){
       let user = await models.User.findOne({where:{email: emails[i]}}) ; 
       if(!user){

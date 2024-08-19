@@ -31,7 +31,7 @@ exports.getUserPortalRequests = async (req, res, next) => {
       where: { user_id: req.user.id },
     });
     if (portalRequests.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no requests to show",
       });
     }
@@ -51,7 +51,7 @@ exports.getAllPortalRequests = async (req, res, next) => {
       include: [{ model: models.User }],
     });
     if (portalRequests.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no portal requests to show",
         data: portalRequests,
       });
@@ -72,7 +72,7 @@ exports.getGovPortalRequests = async (req, res, next) => {
       include: [{ model: models.User }],
     });
     if (portalRequests.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no portal requests to show",
         data: portalRequests,
       });
@@ -93,7 +93,7 @@ exports.checkPortalRequest = async (req, res, next) => {
       where: { id: req.params.req_id },
     });
     if (!portalRequest) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no portal request with this id",
         data: portalRequest,
       });
@@ -117,7 +117,7 @@ exports.checkPortalRequest = async (req, res, next) => {
       where: { id: req.params.req_id },
     });
     if (!portalRequest) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no portal request with this id",
         data: portalRequest,
       });
@@ -142,7 +142,7 @@ exports.processPortalRequest = async (req, res, next) => {
       where: { id: req.params.req_id },
     });
     if (!portalRequest) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no portal request with this id",
         data: portalRequest,
       });
@@ -166,7 +166,7 @@ exports.deletePortalRequest = async (req, res, next) => {
       where: { id: req.params.req_id },
     });
     if (!portalRequest) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "there is no request with this id",
       });
     }
