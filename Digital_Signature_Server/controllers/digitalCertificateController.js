@@ -324,10 +324,12 @@ exports.storePublicKey  = async (req, res, next) => {
   let {publicKey } = req.body ; 
   
   try{
-    const existingCertificate = await models.DigitalCertificate.findOne({
-      user_id: req.user.id 
+    const existingCertificate = await models.DigitalCertificate.count({
+      where:{user_id: req.user.id }
     }); 
-    if(existingCertificate){
+    console.log('req' ,req.user.id)
+    console.log(existingCertificate );
+    if(existingCertificate > 0){
       return res.status(422).json({
         message:'You already have a digital certificate you cannot regenreate one'
       });
@@ -451,8 +453,18 @@ exports.storeDocument = async (req, res , next)=>{
 exports.signDocument = async (req, res , next )=>{
   let {signature , document_id } = req.body ; 
   let user = req.user ; 
-  let publicKeyObj = await models.PublicKey.findOne({where:{user_id: user.id}});
+  
+  let publicKeyObj = await models.PublicKey.findOne({
+    where:{user_id: req.user.id} 
+  });
+  if(!publicKeyObj){
+    return res.status(422).json({
+      message:'User cannot sign document because he did not generate identity'
+    });
+  }
+  
   let publicKey = publicKeyObj.publicKey ; 
+
   let document = await models.Document.findOne({
     where:{id: document_id}
   });
@@ -465,9 +477,12 @@ exports.signDocument = async (req, res , next )=>{
       message:'Failed to verify signature' 
     });
   }
-  let variousParties = await models.variousParites.updateOne({
+  console.log(models.variousParties);
+  let variousParties = await models.VariousParties.findOne({
     where:{user_id: user.id , document_id: document_id }
-  }, {isSigned: true});
+  });
+  variousParties.update({isSigned:true}) ; 
+  variousParties.save();
   
   return res.status(200).json({
     message:'signed succesfully'
