@@ -45,4 +45,24 @@ router.get(
   CertificateController.getAllCertificateOrders
 );
 
+
+router.post(
+  '/v2/C_Orders/createDigitalCertificate',
+  userAuth,
+  CertificateController.storePublicKey
+);
+
+
+router.post(
+  '/v2/document/',
+  multer.uploadDocument.fields([
+    {
+      name: "document",
+      maxCount: 1,
+    },
+  ]),
+  userAuth,
+  CertificateController.storeDocument
+)
+
 module.exports = router;
