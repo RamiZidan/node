@@ -488,7 +488,12 @@ exports.signDocument = async (req, res , next )=>{
   });
   variousParties.update({isSigned:true}) ; 
   variousParties.save();
-
+  if(document.counter == 1){
+    document.update({counter: document.counter - 1, documentStatus: 'approved'});
+  }
+  else{
+    document.update({counter : document.counter - 1 });
+  }
   return res.status(200).json({
     message:'signed succesfully'
   })
