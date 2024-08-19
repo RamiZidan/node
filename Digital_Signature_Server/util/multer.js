@@ -78,6 +78,7 @@ const uploadImage = multer({ storage: imageStorage, fileFilter: imageFilter });
 const uploadDocument = multer({
   storage: documentStorage,
   fileFilter: documentFilter,
+  limits:{ fieldSize: 2 * 1024 * 1024 }
 });
 
 module.exports = { uploadImage, uploadDocument };
