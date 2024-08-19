@@ -10,8 +10,8 @@ const archiver = require("archiver");
 exports.uploadUserData = async (req, res, next) => {
   const { fullName, nationalNumber } = req.body;
   try {
-    const existingCertificate = await models.DigitalCertificate.findOne({
-      where: { userId: req.user.id },
+    const existingCertificate = await models.CertificateOrders.findOne({
+      where: { user_id: req.user.id },
     });
 
     if (existingCertificate) {
@@ -69,7 +69,7 @@ exports.createDigitalCertificate = async (req, res, next) => {
 
   const { organization } = req;
   try {
-    const existingCertificate = await models.DigitalCertificate.findOne({
+    const existingCertificate = await models.CertificateOrders.findOne({
       where: { userId: req.user.id },
     });
 
@@ -313,3 +313,145 @@ exports.getAllCertificateOrders = async (req, res, next) => {
     });
   }
 };
+
+
+
+
+
+
+
+exports.storePublicKey  = async (req, res, next) => {
+  let {publicKey } = req.body ; 
+  
+  try{
+    const existingCertificate = await models.DigitalCertificate.findOne({
+      user_id: req.user.id 
+    }); 
+    if(existingCertificate){
+      return res.status(422).json({
+        message:'You already have a digital certificate you cannot regenreate one'
+      });
+    }
+    const publicKey_ = await models.PublicKey.create({
+      user_id: req.user.id,
+      publicKey: publicKey ,
+    });
+    let currentDate = new Date();
+    let validityPeriod = currentDate.setFullYear(currentDate.getFullYear() + 1);
+
+    const timestamp = Date.now().toString(16);
+    const randomBytes = crypto.randomBytes(8).toString("hex");
+    const serialNumber = `${timestamp}${randomBytes}`;
+    const certificate = await models.DigitalCertificate.create({
+      user_id: req.user.id,
+      version: "X.509",
+      serialNumber: 1,
+      organization: '--',
+      signatureAlgorithm: "RSA",
+      issuer: req.user.firstName + " " + req.user.lastName,
+      validatePeriod: validityPeriod,
+      subject: "individual certificate",
+    });
+    return res.status(200).json({
+      message:'created certifcate succesfully',
+      data: certificate
+    });
+
+  }
+  catch(error){
+    console.log(error);
+    res.status(500).json({error:'unable to store digital certificate'})
+  }
+};
+
+
+async function verify(signature, publicKey, document) {
+    const pemHeader = "-----BEGIN PUBLIC KEY-----";
+    const pemFooter = "-----END PUBLIC KEY-----";
+    const pemContents = publicKey.substring(pemHeader.length, publicKey.length - pemFooter.length);
+    const binaryDerString = atob(pemContents);
+    const binaryDer = Uint8Array.from(binaryDerString, char => char.charCodeAt(0));
+
+    const key = await crypto.subtle.importKey(
+        "spki",
+        binaryDer,
+        {
+            name: "RSASSA-PKCS1-v1_5",
+            hash: { name: "SHA-256" },
+        },
+        false,
+        ["verify"]
+    );
+
+    const isValid = await crypto.subtle.verify(
+        "RSASSA-PKCS1-v1_5",
+        key,
+        Uint8Array.from(atob(signature), c => c.charCodeAt(0)),
+        new TextEncoder().encode(document)
+    );
+    
+    return isValid;
+}
+
+
+
+exports.storeDocument = async (req, res , next)=>{
+  try{
+    let { signature , emails , base64file } = req.body ;
+
+    let document_path =  path.resolve(  req.files.document[0].path ) ;
+    
+    console.log(  document_path );
+    console.log('000000000000000000000000000000000');
+
+    // let document_msg = await fs.readFileSync( document_path ,'utf8') ;
+    console.log('111111111111111111'); 
+    let document_msg = base64file ;
+    console.log('22222222222222222222222222');
+    let publicKey = await models.PublicKey.findOne({
+      where:{user_id: req.user.id} 
+    });
+    console.log(publicKey);
+    let isValid  = await verify(signature , publicKey.publicKey , document_msg ) ; 
+    if(!isValid){
+      return res.status(422).json({message:'Failed to verify Identity: Signature does not match public key'}) ;
+    }
+    console.log(isValid);
+    let document = await models.Document.create({
+      document: req.files.document[0].path , 
+      documentName: req.files.document[0].originalname ,
+      counter: emails.length ,
+      documentStatus:'processing'
+    });
+    let signingParty = await models.VariousParties.create({
+      user_id: req.user.id , 
+      document_id : document.id ,
+      isSigned: true 
+    });
+    let variousParites = []; 
+    emails = emails.split(',');
+    console.log('emailsssss ' ,emails , emails.length ) ;
+    for(let i = 0 ;i < emails.length ; i++){
+      let user = await models.User.findOne({where:{email: emails[i]}}) ; 
+      if(!user){
+        return res.status(422).json({message:'user not in the system'}) ; 
+      }
+      variousParites.push({
+        user_id: user.id ,
+        document_id: document.id ,
+        isSigned: false
+      });
+      console.log(i);
+      let parites = await models.VariousParties.create({user_id: user.id , document_id : document.id , isSigned: false });
+    }
+    console.log('6666666666666666');
+    return res.status(200).json({
+      message:'created succesfully'
+    });
+  }
+  catch(err){
+
+  }
+}
+
+// exports.signDocument = 
