@@ -40,6 +40,10 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: false,
       },
+      liveImage: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
       reqStatus: {
         type: Sequelize.ENUM("pending", "processing", "approved", "rejected"),
       },

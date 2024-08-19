@@ -4,6 +4,7 @@ const CertificateController = require("../controllers/digitalCertificateControll
 const multer = require("../util/multer");
 const userAuth = require("../middlewares/userAuthMiddleware");
 const Auth = require("../middlewares/generalAdminsAuthMiddleware");
+const Validator = require("../middlewares/validators/certificateValidationMiddleware");
 
 router.post(
   "/C_Orders/uploadUserData",
@@ -16,8 +17,13 @@ router.post(
       name: "image_backSide",
       maxCount: 1,
     },
+    // {
+    //   name: "liveImage",
+    //   maxCount: 1,
+    // },
   ]),
   userAuth,
+  Validator.uploadUserDataValidation,
   CertificateController.uploadUserData
 );
 
