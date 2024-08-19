@@ -44,11 +44,13 @@ exports.uploadUserData = async (req, res, next) => {
 
 exports.changeOrderStatus = async (req, res, next) => {
   const { status } = req.body;
+  const { id } = req.params ; 
+
   try {
     if (!req.user) {
       throw new CustomError("user is not set", 400);
     }
-    let id = req.user.id;
+    // let id = req.user;
 
     const order = await models.CertificateOrders.findOne({
       where: { user_id: id },
@@ -400,31 +402,34 @@ async function verify(signature, publicKey, document) {
 exports.storeDocument = async (req, res , next)=>{
   try{
     let { signature , emails , base64file } = req.body ;
-
+    
     let document_path =  path.resolve(  req.files.document[0].path ) ;
     
-
-    // let document_msg = await fs.readFileSync( document_path ,'utf8') ;
+    console.log('--------------------------------------------')
     let document_msg = base64file ;
     let publicKey = await models.PublicKey.findOne({
       where:{user_id: req.user.id} 
     });
+    console.log('00000000000000000000000000000000000')
     let isValid  = await verify(signature , publicKey.publicKey , document_msg ) ; 
+    console.log(isValid ,document_msg )
     if(!isValid){
       return res.status(422).json({message:'Failed to verify Identity: Signature does not match public key'}) ;
     }
-
+    console.log('1111111111111111111111111111111111111111')
     let document = await models.Document.create({
       document: req.files.document[0].path , 
       documentName: req.files.document[0].originalname ,
       counter: emails.length ,
       documentStatus:'processing'
     });
+    console.log('2222222222222222222222222222222222222222222222222')
     let signingParty = await models.VariousParties.create({
       user_id: req.user.id , 
       document_id : document.id ,
       isSigned: true 
     });
+    console.log('3333333333333333333333333333333333333333333333333')
     let variousParites = []; 
     emails = emails.split(',');
     for(let i = 0 ;i < emails.length ; i++){
@@ -437,9 +442,10 @@ exports.storeDocument = async (req, res , next)=>{
         document_id: document.id ,
         isSigned: false
       });
+      console.log('4444444444444444444444444444444444444444444444')
       let parites = await models.VariousParties.create({user_id: user.id , document_id : document.id , isSigned: false });
+      console.log('5555555555555555555555555555555555555')
     }
-
     return res.status(200).json({
       message:'created succesfully'
     });
@@ -483,7 +489,7 @@ exports.signDocument = async (req, res , next )=>{
   });
   variousParties.update({isSigned:true}) ; 
   variousParties.save();
-  
+
   return res.status(200).json({
     message:'signed succesfully'
   })
