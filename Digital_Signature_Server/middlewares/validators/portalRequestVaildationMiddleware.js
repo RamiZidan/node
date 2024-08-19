@@ -32,9 +32,9 @@ const createPortalRequestValidation = [
 const checkPortalRequestValidatioon = [
   check("reqStatus", "the status is required")
     .trim()
-    .notEmpty()
-    .isIn(["pending", "published", "rejected"])
-    .withMessage("the status valud is incorrect"),
+    .notEmpty(),
+    // .isIn(["pending", "published", "rejected"])
+    // .withMessage("the status valud is incorrect"),
   check("message"),
   (req, res, next) => {
     const errors = validationResult(req);
@@ -48,9 +48,9 @@ const checkPortalRequestValidatioon = [
 const processPortalRequestValidatioon = [
   check("reqStatus", "the status is required")
     .trim()
-    .notEmpty()
-    .isIn(["approved", "published", "rejected"])
-    .withMessage("the status valud is incorrect"),
+    .notEmpty(),
+    // .isIn(["approved", "published", "rejected"])
+    // .withMessage("the status valud is incorrect"),
   check("message"),
   (req, res, next) => {
     const errors = validationResult(req);

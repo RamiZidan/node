@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       image_frontSide: DataTypes.TEXT,
       image_backSide: DataTypes.TEXT,
-      liveImage: DataTypes.TEXT,
+      // liveImage: DataTypes.TEXT,
       fullName: DataTypes.STRING,
       nationalNumber: DataTypes.INTEGER,
       reqStatus: DataTypes.ENUM(

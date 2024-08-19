@@ -11,10 +11,10 @@ const CustomError = require("../util/CustomError");
 exports.uploadUserData = async (req, res, next) => {
   const { fullName, nationalNumber } = req.body;
   try {
-    const existingCertificate = await models.DigitalCertificate.findOne({
+    const existingCertificate = await models.CertificateOrders.findOne({
       where: { user_id: req.user.id },
     });
-    if (existingCertificate) {
+    if (existingCertificate ) {
       return res
         .status(400)
         .json({ message: "You already have a certificate." });
@@ -29,7 +29,7 @@ exports.uploadUserData = async (req, res, next) => {
         req.files.image_frontSide[0].path
       ),
       image_backSide: path.relative("public", req.files.image_backSide[0].path),
-      liveImage: path.relative("public", req.files.liveImage[0].path),
+      // liveImage: path.relative("public", req.files.liveImage[0].path),
       fullName: fullName,
       nationalNumber: nationalNumber,
       reqStatus: "pending",
@@ -52,12 +52,12 @@ exports.uploadUserData = async (req, res, next) => {
             console.error("Failed to delete back side image:", unlinkErr);
         });
       }
-      if (req.files.liveImage && req.files.liveImage[0]) {
-        fs.unlink(req.files.liveImage[0].path, (unlinkErr) => {
-          if (unlinkErr)
-            console.error("Failed to delete live Image:", unlinkErr);
-        });
-      }
+      // if (req.files.liveImage && req.files.liveImage[0]) {
+      //   fs.unlink(req.files.liveImage[0].path, (unlinkErr) => {
+      //     if (unlinkErr)
+      //       console.error("Failed to delete live Image:", unlinkErr);
+      //   });
+      // }
     }
     next(err);
   }

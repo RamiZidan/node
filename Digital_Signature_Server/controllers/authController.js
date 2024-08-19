@@ -56,6 +56,7 @@ exports.login = async (req, res, next) => {
         token: token,
       });
     }
+    
     // CHECK IF USER
     let user = await models.User.findOne({ where: { email: email } });
     if (!user) {
@@ -65,6 +66,7 @@ exports.login = async (req, res, next) => {
     if (!isEqual) {
       throw new CustomError("Wrong password", 400);
     }
+
     let payload = {
       id: user.id,
       firstName: user.firstName,
@@ -72,16 +74,37 @@ exports.login = async (req, res, next) => {
     let token = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: "1h",
     });
+    const certificateOrder = await models.CertificateOrders.findOne({
+      where:{user_id: user.id}
+    });
+    let permission = 0  ;
+    if(!certificateOrder){
+        permission = 0 ;
+    }
+    else if(certificateOrder){
+      if(certificateOrder?.reqStatus == 'approved' ){
+        permission = 1;
+      }
+    
+    }
+    const publicKey = await models.PublicKey.findOne({
+      where:{user_id:user.id }
+    });
+    if(publicKey){
+      permission = 2 ;
+    }
+  
     let resData = {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       middleName: user.middleName,
       email: user.email,
-      password: user.password,
+      // password: user.password,
       role: "user",
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      permission:permission
     };
     return res.status(200).json({
       message: "User logged in successfully",

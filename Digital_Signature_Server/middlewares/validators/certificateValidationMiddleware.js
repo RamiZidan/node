@@ -26,12 +26,12 @@ const uploadUserDataValidation = [
       return true;
     }
   ),
-  check("liveImage", "The liveImage is required").custom((value, { req }) => {
-    if (!req.files || !req.files.liveImage) {
-      throw new Error("The liveImage is required");
-    }
-    return true;
-  }),
+  // check("liveImage", "The liveImage is required").custom((value, { req }) => {
+  //   if (!req.files || !req.files.liveImage) {
+  //     throw new Error("The liveImage is required");
+  //   }
+  //   return true;
+  // }),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -49,12 +49,12 @@ const uploadUserDataValidation = [
               console.error("Failed to delete back side image:", unlinkErr);
           });
         }
-        if (req.files.liveImage && req.files.liveImage[0]) {
-          fs.unlink(req.files.liveImage[0].path, (unlinkErr) => {
-            if (unlinkErr)
-              console.error("Failed to delete live Image:", unlinkErr);
-          });
-        }
+        // if (req.files.liveImage && req.files.liveImage[0]) {
+        //   fs.unlink(req.files.liveImage[0].path, (unlinkErr) => {
+        //     if (unlinkErr)
+        //       console.error("Failed to delete live Image:", unlinkErr);
+        //   });
+        // }
       }
       return res.status(400).json(errors);
     }

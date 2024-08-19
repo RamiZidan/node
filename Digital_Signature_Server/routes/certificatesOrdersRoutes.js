@@ -17,10 +17,10 @@ router.post(
       name: "image_backSide",
       maxCount: 1,
     },
-    {
-      name: "liveImage",
-      maxCount: 1,
-    },
+    // {
+    //   name: "liveImage",
+    //   maxCount: 1,
+    // },
   ]),
   userAuth,
   Validator.uploadUserDataValidation,
