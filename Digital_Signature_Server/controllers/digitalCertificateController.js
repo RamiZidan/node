@@ -47,13 +47,11 @@ exports.changeOrderStatus = async (req, res, next) => {
   const { id } = req.params ; 
 
   try {
-    if (!req.user) {
-      throw new CustomError("user is not set", 400);
-    }
+    
     // let id = req.user;
 
     const order = await models.CertificateOrders.findOne({
-      where: { user_id: id },
+      where: { id : id },
     });
     
     await order.update({ reqStatus: status });

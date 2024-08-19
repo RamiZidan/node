@@ -23,7 +23,7 @@ router.post(
 
 router.post(
   "/C_Orders/changeOrderStatus/:id",
-  userAuth,
+  // userAuth,
   CertificateController.changeOrderStatus
 );
 
