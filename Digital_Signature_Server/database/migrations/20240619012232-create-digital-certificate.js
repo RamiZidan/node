@@ -22,7 +22,7 @@ module.exports = {
       },
 
       version: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: true,
       },
       serialNumber: {
@@ -30,11 +30,11 @@ module.exports = {
         allowNull: false,
       },
       signatureAlgorithm: {
-        type: Sequelize.STRING,
+        type:  Sequelize.TEXT,
         allowNull: false,
       },
       issuer: {
-        type: Sequelize.STRING,
+        type:  Sequelize.TEXT,
         allowNull: true,
       },
       validatePeriod: {
@@ -42,11 +42,11 @@ module.exports = {
         allowNull: true,
       },
       subject: {
-        type: Sequelize.STRING,
+        type:  Sequelize.TEXT,
         allowNull: true,
       },
       organization: {
-        type: Sequelize.STRING,
+        type:  Sequelize.TEXT,
         allowNull: true,
       },
 

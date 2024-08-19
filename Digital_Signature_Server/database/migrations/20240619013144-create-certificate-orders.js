@@ -25,7 +25,7 @@ module.exports = {
         allowNull: false,
       },
       fullName: {
-        type: Sequelize.STRING,
+        type:  Sequelize.TEXT,
         allowNull: false,
       },
       nationalNumber: {

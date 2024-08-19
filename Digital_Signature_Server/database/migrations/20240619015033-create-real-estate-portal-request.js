@@ -46,7 +46,7 @@ module.exports = {
         // onDelete: "CASCADE",
       },
       reqName: {
-        type: Sequelize.STRING,
+        type:  Sequelize.TEXT,
         allowNull: false,
       },
       taboImage: {
